@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="header">
+        Welcome to the Rock Paper Scissors game!
+    </div>
+    <div class="play_game">
+        <button id="start">Start Game</button>
+        <div id="info_enemies">
+            
+   
+        </div>
+
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        const socket = io();
+        start_button= document.getElementById('start');
+        info_enemies = document.getElementById('info_enemies');
+        start_button.addEventListener('click', function() {
+            const id = Math.floor(Math.random()*10);
+            socket.emit('start_game');
+        });
+
+        socket.on('start_game', function(data) {
+            const p_message= document.createElement('p');
+            const h_name = document.createElement('h1');
+            p_message.textContent = data.message ;
+            h_name.textContent = data.player;
+            info_enemies.appendChild(p_message);
+            info_enemies.appendChild(h_name);
+            info_enemies.style.display = 'block';
+            start_button.disabled = true;
+        });
+        socket.on('waiting_for_player', function(data) {
+            alert(data);
+        });
+    </script>
+</body>
+</html>
