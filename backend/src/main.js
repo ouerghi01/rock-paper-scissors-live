@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename); // get the name of the directory
 app.use(express.static(path.join(__dirname, 'public')));
 let users_online = new Map();
 let users_not_available = [];
+let couple_users = [];
 io.on('connection', (socket) => {
     console.log('a user connected');
     users_online.set(socket.id, "");
@@ -21,7 +22,6 @@ io.on('connection', (socket) => {
     });
     socket.on('start_game', (data) => {
         users_online.set(socket.id, data.player);
-        console.log(data.player);
         const available_users = Array.from(users_online.keys()).filter(id => !users_not_available.includes(id));
         if (available_users.length > 0) {
             let randomIndex = Math.floor(Math.random() * available_users.length);
@@ -30,11 +30,15 @@ io.on('connection', (socket) => {
                 randomIndex = Math.floor(Math.random() * available_users.length);
                 randomSocketId = available_users[randomIndex];
             }
-            const randomUser_name = users_online.get(randomSocketId);
+            //const randomUser_name = users_online.get(randomSocketId);
             const shared_session_id = Math.random().toString(36).substring(7);
             io.sockets.sockets.get(randomSocketId).join(shared_session_id);
             socket.join(shared_session_id);
-
+            couple_users.push({
+                session_1: socket.id,
+                session_2: randomSocketId,
+                shared_session_id: shared_session_id
+            });
             io.to(shared_session_id).emit('start_game', {
                 message: `you are playing now !!`,
                 players: [
