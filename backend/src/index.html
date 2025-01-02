@@ -4,13 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .header{
+            text-align: center;
+            font-size: 32px;
+            background-color:antiquewhite;
+            color: blueviolet;
+            padding: 20px;
+            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            align-items: center;
+            position: relative;
+            justify-content: center;
+            display: flex;
+        }
+        #start{
+            margin: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 20px 20px;
+            border: 1px solid black;
+            border-radius: 25px;
+            background-color: rgb(63, 63, 177);
+            color:blueviolet;
+            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            align-items: center;
+            position: relative;
+            justify-content: center;
+            left: 50%;
+            top: 50%;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
         Welcome to the Rock Paper Scissors game!
+        <div class="initiate_game">
+            <button id="start">Start Game</button>
+        </div>
     </div>
     <div class="play_game">
-        <button id="start">Start Game</button>
+       
+
         <div id="info_enemies">
             
    
@@ -23,21 +65,108 @@
         const socket = io();
         start_button= document.getElementById('start');
         info_enemies = document.getElementById('info_enemies');
+        let shared_session_id=''
+        let players_container_id=[]
         start_button.addEventListener('click', function() {
             const id = Math.floor(Math.random()*10);
-            socket.emit('start_game');
+            socket.emit('start_game', {player: ""});
         });
 
         socket.on('start_game', function(data) {
-            const p_message= document.createElement('p');
-            const h_name = document.createElement('h1');
-            p_message.textContent = data.message ;
-            h_name.textContent = data.player;
-            info_enemies.appendChild(p_message);
-            info_enemies.appendChild(h_name);
-            info_enemies.style.display = 'block';
-            start_button.disabled = true;
+            console.log(data);
+            shared_session_id = data.shared_session_id;
+            info_enemies.innerHTML = '';
+            data.players.forEach((player) => {
+                const player_window = document.createElement('div');
+                player_window.id=player.session_id                
+                const player_name = document.createElement('h3');
+                player_window.style.width = '350px';
+                player_window.style.margin = 'fit-content';
+                player_window.style.padding = '10px';
+                player_window.style.border = '1px solid black';
+                player_name.textContent = player.name;
+                player_name.style.textAlign = 'center';
+                if(socket.id === player.session_id) {
+                    player_name.style.color = 'red';
+                }else{
+                    player_name.style.color = 'blue';
+
+                }
+                
+                player_window.appendChild(player_name);
+                start_button.disabled = true;
+                if(player.session_id == socket.id) {
+                    player_window.style.backgroundColor = 'transparent';
+                    player_window.style.float = 'right';
+                }else{
+                    player_window.style.backgroundColor = 'transparent';
+
+                    player_window.style.float = 'left';
+                }
+                
+                info_enemies.appendChild(player_window);
+                players_container_id.push(player.session_id);
+                
+
+            });
+            const vs_div = document.createElement('div');
+            vs_div.textContent = 'VS';
+            vs_div.style.textAlign = 'center';
+            vs_div.style.position = 'absolute';
+            vs_div.style.top = '50%';
+            vs_div.style.left = '50%';
+            vs_div.style.transform = 'translate(-50%, -50%)';
+            vs_div.style.fontSize = '20px';
+            vs_div.style.fontFamily = 'Arial';
+            vs_div.style.fontWeight = 'bold';
+            vs_div.style.color = 'black';
+            vs_div.style.animation = 'fadeInOut 2s infinite';
+
+            
+            info_enemies.appendChild(vs_div);
+            if(players_container_id.length == 2){
+            players_container_id.map((player_container_id) =>{
+                console.log(player_container_id)
+                player_container=document.getElementById(player_container_id);
+                actions_container=document.createElement('div');
+                actions_container.style.display='flex';
+                actions_container.style.flexDirection='row';
+                moves=['rocket','paper','scissors'] ;
+                colors=['red','blue','green'];
+                moves.map((move) =>{
+                    const move_button = document.createElement('button');
+                    move_button.textContent = move;
+                    move_button.style.width = '100px';
+                    move_button.style.height = '50px';
+                    move_button.style.margin = '10px';
+                    move_button.style.border = '1px solid black';
+                    move_button.style.backgroundColor = '';
+                    let random_index=Math.floor(Math.random()*3);
+                    move_button.style.color = colors[random_index];
+                    move_button.style.fontFamily = 'Arial';
+
+                    move_button.style.fontWeight = 'bold';
+                    move_button.style.fontSize = '20px';
+                    move_button.style.cursor = 'pointer';
+                    move_button.style.borderRadius = '10px';
+                    move_button.style.animation = 'fadeInOut 2s infinite';
+                    move_button.style.boxShadow = '0 0 10px 0 rgba(0, 0, 0, 0.1)';
+                    move_button.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+                    move_button.addEventListener('click', function() {
+                        
+                        console.log('clicked');
+                    });
+                    
+                    actions_container.appendChild(move_button);
+                });
+                player_container.appendChild(actions_container);
+            })
+            }
+            alert(data.message);
+
         });
+        console.log(players_container_id);
+        
         socket.on('waiting_for_player', function(data) {
             alert(data);
         });
